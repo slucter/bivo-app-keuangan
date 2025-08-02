@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aplikasi Keuangan",
+  title: "BIVO - Aplikasi Keuangan",
   description: "Aplikasi pengatur dan monitor keuangan pribadi",
   manifest: "/manifest.json",
   themeColor: "#2563eb",
