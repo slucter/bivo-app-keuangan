@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import TransactionForm from './TransactionForm'
 import TransactionList from './TransactionList'
 
@@ -41,10 +41,10 @@ interface DashboardData {
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [showTransactionForm, setShowTransactionForm] = useState(false)
-  const [showTransactionList, setShowTransactionList] = useState(false)
   const [showAllTransactions, setShowAllTransactions] = useState(false)
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null)
+  const [selectedTransaction, setSelectedTransaction] = useState<DashboardData['recentTransactions'][0] | null>(null)
   const [showTransactionDetail, setShowTransactionDetail] = useState(false)
 
 
@@ -54,12 +54,11 @@ export default function Dashboard() {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1)
 
-  useEffect(() => {
-    fetchDashboardData()
-  }, [selectedYear, selectedMonth])
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async (isRefresh = false) => {
     try {
+      if (isRefresh) {
+        setRefreshing(true)
+      }
       const response = await fetch(`/api/dashboard?year=${selectedYear}&month=${selectedMonth}`)
       if (response.ok) {
         const dashboardData = await response.json()
@@ -69,8 +68,13 @@ export default function Dashboard() {
       console.error('Error fetching dashboard data:', error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }
+  }, [selectedYear, selectedMonth])
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [fetchDashboardData])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -93,7 +97,7 @@ export default function Dashboard() {
     return text.substring(0, maxLength) + '...'
   }
 
-  const handleTransactionClick = (transaction: any) => {
+  const handleTransactionClick = (transaction: DashboardData['recentTransactions'][0]) => {
     setSelectedTransaction(transaction)
     setShowTransactionDetail(true)
   }
@@ -120,8 +124,68 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-8 p-4">
+        {/* Header Skeleton */}
+        <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+          <div className="bg-white p-6 rounded-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div>
+                <div className="h-8 bg-gray-300 rounded w-64 mb-2"></div>
+                <div className="h-6 bg-gray-300 rounded w-48"></div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="h-16 bg-gray-300 rounded-xl w-32"></div>
+                <div className="h-16 bg-gray-300 rounded-xl w-32"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 animate-pulse">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="h-4 bg-gray-400 rounded w-20"></div>
+                  <div className="hidden sm:block h-8 w-8 bg-gray-400 rounded"></div>
+                </div>
+                <div className="h-6 sm:h-8 bg-gray-400 rounded w-full mt-auto"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+            <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+            <div className="h-64 bg-gray-400 rounded"></div>
+          </div>
+          <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+            <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+            <div className="h-64 bg-gray-400 rounded"></div>
+          </div>
+        </div>
+        
+        {/* Recent Transactions Skeleton */}
+        <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+          <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-gray-400 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-gray-500 rounded-full"></div>
+                  <div>
+                    <div className="h-4 bg-gray-500 rounded w-32 mb-1"></div>
+                    <div className="h-3 bg-gray-500 rounded w-24"></div>
+                  </div>
+                </div>
+                <div className="h-4 bg-gray-500 rounded w-20"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -192,73 +256,92 @@ export default function Dashboard() {
       </div>
       {/* Neobrutalism Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        {/* Income Card */}
-        <div className="bg-green-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
-                <span className="hidden sm:inline text-lg">💰</span>
-                PEMASUKAN
-              </p>
-              <div className="hidden sm:block text-2xl lg:text-3xl">📈</div>
-            </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
-              {formatCurrency(data.summary.totalIncome)}
-            </p>
-          </div>
-        </div>
-
-        {/* Expense Card */}
-        <div className="bg-red-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
-                <span className="hidden sm:inline text-lg">💸</span>
-                PENGELUARAN
-              </p>
-              <div className="hidden sm:block text-2xl lg:text-3xl">📉</div>
-            </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
-              {formatCurrency(data.summary.totalExpense)}
-            </p>
-          </div>
-        </div>
-
-        {/* Savings Card */}
-        <div className="bg-blue-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
-                <span className="hidden sm:inline text-lg">🏦</span>
-                TABUNGAN
-              </p>
-              <div className="hidden sm:block text-2xl lg:text-3xl">💎</div>
-            </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
-              {formatCurrency(data.summary.totalSavings)}
-            </p>
-          </div>
-        </div>
-
-        {/* Balance Card */}
-        <div className={`border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6 ${
-          data.summary.balance >= 0 ? 'bg-yellow-400' : 'bg-orange-400'
-        }`}>
-          <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
-                <span className="hidden sm:inline text-lg">💳</span>
-                SALDO
-              </p>
-              <div className="hidden sm:block text-2xl lg:text-3xl">
-                {data.summary.balance >= 0 ? '🎯' : '⚠️'}
+        {refreshing ? (
+          // Loading placeholders
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 animate-pulse">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="h-4 bg-gray-400 rounded w-20"></div>
+                    <div className="hidden sm:block h-8 w-8 bg-gray-400 rounded"></div>
+                  </div>
+                  <div className="h-6 sm:h-8 bg-gray-400 rounded w-full mt-auto"></div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            {/* Income Card */}
+            <div className="bg-green-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
+                    <span className="hidden sm:inline text-lg">💰</span>
+                    PEMASUKAN
+                  </p>
+                  <div className="hidden sm:block text-2xl lg:text-3xl">📈</div>
+                </div>
+                <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
+                  {formatCurrency(data.summary.totalIncome)}
+                </p>
               </div>
             </div>
-            <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
-              {formatCurrency(data.summary.balance)}
-            </p>
-          </div>
-        </div>
+
+            {/* Expense Card */}
+            <div className="bg-red-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
+                    <span className="hidden sm:inline text-lg">💸</span>
+                    PENGELUARAN
+                  </p>
+                  <div className="hidden sm:block text-2xl lg:text-3xl">📉</div>
+                </div>
+                <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
+                  {formatCurrency(data.summary.totalExpense)}
+                </p>
+              </div>
+            </div>
+
+            {/* Savings Card */}
+            <div className="bg-blue-400 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
+                    <span className="hidden sm:inline text-lg">🏦</span>
+                    TABUNGAN
+                  </p>
+                  <div className="hidden sm:block text-2xl lg:text-3xl">💎</div>
+                </div>
+                <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
+                  {formatCurrency(data.summary.totalSavings)}
+                </p>
+              </div>
+            </div>
+
+            {/* Balance Card */}
+            <div className={`border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all duration-200 p-4 sm:p-6 ${
+              data.summary.balance >= 0 ? 'bg-yellow-400' : 'bg-orange-400'
+            }`}>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs sm:text-sm font-black text-black uppercase tracking-wide flex items-center gap-2">
+                    <span className="hidden sm:inline text-lg">💳</span>
+                    SALDO
+                  </p>
+                  <div className="hidden sm:block text-2xl lg:text-3xl">
+                    {data.summary.balance >= 0 ? '🎯' : '⚠️'}
+                  </div>
+                </div>
+                <p className="text-lg sm:text-xl lg:text-2xl font-black text-black break-all mt-auto">
+                  {formatCurrency(data.summary.balance)}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Neobrutalism Action Buttons */}
@@ -376,28 +459,38 @@ export default function Dashboard() {
         <h3 className="text-xl font-black text-black mb-6 uppercase tracking-wide flex items-center gap-2">
           📈 TREND 6 BULAN TERAKHIR
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
           {data.monthlyTrend.map((month, index) => (
-            <div key={index} className="bg-white border-3 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
-              <div className="font-black text-black mb-3 text-sm uppercase">{month.month}</div>
+            <div key={index} className="bg-white border-3 border-black rounded-xl p-3 sm:p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
+              <div className="font-black text-black mb-3 text-xs sm:text-sm uppercase border-b-2 border-black pb-2">{month.month}</div>
               <div className="space-y-2">
-                <div className="text-xs font-bold text-green-700 flex items-center justify-center gap-1">
-                  <span>💰</span>
-                  +{formatCurrency(month.income)}
+                <div className="bg-green-100 border-2 border-green-600 rounded-lg p-2">
+                  <div className="text-xs font-black text-green-800 uppercase tracking-wide mb-1">PEMASUKAN</div>
+                  <div className="text-xs sm:text-sm font-bold text-green-700">
+                    +{formatCurrency(month.income)}
+                  </div>
                 </div>
-                <div className="text-xs font-bold text-red-700 flex items-center justify-center gap-1">
-                  <span>💸</span>
-                  -{formatCurrency(month.expense)}
+                <div className="bg-red-100 border-2 border-red-600 rounded-lg p-2">
+                  <div className="text-xs font-black text-red-800 uppercase tracking-wide mb-1">PENGELUARAN</div>
+                  <div className="text-xs sm:text-sm font-bold text-red-700">
+                    -{formatCurrency(month.expense)}
+                  </div>
                 </div>
-                <div className="text-xs font-bold text-blue-700 flex items-center justify-center gap-1">
-                  <span>🏦</span>
-                  +{formatCurrency(month.savings)}
+                <div className="bg-blue-100 border-2 border-blue-600 rounded-lg p-2">
+                  <div className="text-xs font-black text-blue-800 uppercase tracking-wide mb-1">TABUNGAN</div>
+                  <div className="text-xs sm:text-sm font-bold text-blue-700">
+                    +{formatCurrency(month.savings)}
+                  </div>
                 </div>
-                <div className={`text-xs font-black border-2 border-black rounded-lg py-1 px-2 ${
+                <div className={`border-2 border-black rounded-lg py-2 px-1 ${
                   (month.income - month.expense - month.savings) >= 0 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
                 }`}>
-                  {(month.income - month.expense - month.savings) >= 0 ? '🎯' : '⚠️'}
-                  {formatCurrency(month.income - month.expense - month.savings)}
+                  <div className="text-xs font-black uppercase tracking-wide mb-1">
+                    {(month.income - month.expense - month.savings) >= 0 ? 'SURPLUS' : 'DEFISIT'}
+                  </div>
+                  <div className="text-xs sm:text-sm font-black">
+                    {formatCurrency(Math.abs(month.income - month.expense - month.savings))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -411,7 +504,7 @@ export default function Dashboard() {
           onClose={() => setShowTransactionForm(false)}
           onSuccess={() => {
             setShowTransactionForm(false)
-            fetchDashboardData()
+            fetchDashboardData(true)
           }}
           currentBalance={data.summary.balance}
         />

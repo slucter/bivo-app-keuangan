@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Dashboard from '@/components/Dashboard'
 import AuthForm from '@/components/AuthForm'
 import Profile from '@/components/Profile'
+import { getGuestFromStorage } from '@/lib/auth'
 
 interface User {
   id: string
@@ -46,13 +47,34 @@ export default function Home() {
 
   const checkAuth = async () => {
     try {
+      // Cek auth biasa dulu
       const response = await fetch('/api/auth/me')
       if (response.ok) {
-        const userData = await response.json()
-        setUser(userData.user)
+        const data = await response.json()
+        setUser(data.user)
+        setLoading(false)
+        return
+      }
+      
+      // Jika tidak ada auth, cek guest
+      const guestUser = getGuestFromStorage()
+      if (guestUser) {
+        // Sync guest user ke database
+        const guestResponse = await fetch('/api/guest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guestId: guestUser.id,
+            name: guestUser.name
+          })
+        })
+        
+        if (guestResponse.ok) {
+          setUser(guestUser as any)
+        }
       }
     } catch (error) {
-      console.error('Error checking auth:', error)
+      console.error('Auth check error:', error)
     } finally {
       setLoading(false)
     }
@@ -74,8 +96,70 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="space-y-8 p-4">
+          {/* Header Skeleton */}
+          <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+            <div className="bg-white p-6 rounded-xl">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div>
+                  <div className="h-8 bg-gray-300 rounded w-64 mb-2"></div>
+                  <div className="h-6 bg-gray-300 rounded w-48"></div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="h-16 bg-gray-300 rounded-xl w-32"></div>
+                  <div className="h-16 bg-gray-300 rounded-xl w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Summary Cards Skeleton */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-4 sm:p-6 animate-pulse">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="h-4 bg-gray-400 rounded w-20"></div>
+                    <div className="hidden sm:block h-8 w-8 bg-gray-400 rounded"></div>
+                  </div>
+                  <div className="h-6 sm:h-8 bg-gray-400 rounded w-full mt-auto"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Charts Section Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+              <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+              <div className="h-64 bg-gray-400 rounded"></div>
+            </div>
+            <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+              <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+              <div className="h-64 bg-gray-400 rounded"></div>
+            </div>
+          </div>
+          
+          {/* Recent Transactions Skeleton */}
+          <div className="bg-gray-300 border-4 border-black rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 animate-pulse">
+            <div className="h-6 bg-gray-400 rounded w-48 mb-4"></div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-gray-400 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-gray-500 rounded-full"></div>
+                    <div>
+                      <div className="h-4 bg-gray-500 rounded w-32 mb-1"></div>
+                      <div className="h-3 bg-gray-500 rounded w-24"></div>
+                    </div>
+                  </div>
+                  <div className="h-4 bg-gray-500 rounded w-20"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

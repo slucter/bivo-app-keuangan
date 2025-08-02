@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createGuestId, setGuestToStorage, GuestUser } from '@/lib/auth'
 
 interface User {
   id: string
@@ -48,37 +49,36 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
           onLogin(data.user)
         } else {
           // Setelah registrasi, otomatis login
-          const loginResponse = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password
-            })
-          })
-          
-          if (loginResponse.ok) {
-            const loginData = await loginResponse.json()
-            onLogin(loginData.user)
-          }
+          onLogin(data.user)
         }
       } else {
         setError(data.error || 'Terjadi kesalahan')
       }
     } catch (error) {
-      setError('Terjadi kesalahan jaringan')
+      console.error('Auth error:', error)
+      setError('Terjadi kesalahan koneksi')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  const handleGuestLogin = () => {
+    const guestId = createGuestId()
+    const guestUser: GuestUser = {
+      id: guestId,
+      name: 'Pengguna Tamu',
+      isGuest: true
+    }
+    
+    setGuestToStorage(guestUser)
+    onLogin(guestUser as any) // Type assertion untuk compatibility
   }
 
   return (
@@ -100,113 +100,98 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
               </p>
             </div>
           </div>
-        
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              {!isLogin && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-black text-black uppercase tracking-wide mb-2">
-                    NAMA LENGKAP
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    required={!isLogin}
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-yellow-200 border-3 border-black rounded-xl font-bold text-black placeholder-gray-600 focus:bg-yellow-300 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all duration-200"
-                    placeholder="Masukkan nama lengkap"
-                  />
-                </div>
-              )}
-            
-              <div>
-                <label htmlFor="email" className="block text-sm font-black text-black uppercase tracking-wide mb-2">
-                  📧 EMAIL
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-blue-200 border-3 border-black rounded-xl font-bold text-black placeholder-gray-600 focus:bg-blue-300 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all duration-200"
-                  placeholder="Masukkan email"
-                />
-              </div>
-            
-              <div>
-                <label htmlFor="password" className="block text-sm font-black text-black uppercase tracking-wide mb-2">
-                  🔒 PASSWORD
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-pink-200 border-3 border-black rounded-xl font-bold text-black placeholder-gray-600 focus:bg-pink-300 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-2px] focus:translate-y-[-2px] transition-all duration-200"
-                  placeholder="Masukkan password"
-                />
-              </div>
-            </div>
 
-            {error && (
-              <div className="bg-red-400 border-3 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <p className="font-black text-white uppercase tracking-wide text-center">
-                  {error}
-                </p>
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
+              <p className="text-red-700 font-bold text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div>
+                <label htmlFor="name" className="block text-sm font-black text-gray-700 uppercase tracking-wide mb-2">
+                  Nama Lengkap
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required={!isLogin}
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-3 border-black rounded-lg focus:outline-none focus:ring-0 focus:border-purple-500 font-bold text-gray-900 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                  placeholder="Masukkan nama lengkap"
+                />
               </div>
             )}
 
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-green-400 border-3 border-black rounded-xl px-6 py-4 font-black text-black uppercase tracking-wide text-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
-                    <span>MEMPROSES...</span>
-                  </div>
-                ) : (
-                  <span>{isLogin ? 'MASUK SEKARANG' : 'DAFTAR SEKARANG'}</span>
-                )}
-              </button>
+              <label htmlFor="email" className="block text-sm font-black text-gray-700 uppercase tracking-wide mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border-3 border-black rounded-lg focus:outline-none focus:ring-0 focus:border-purple-500 font-bold text-gray-900 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                placeholder="nama@email.com"
+              />
             </div>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin)
-                  setError('')
-                  setFormData({ name: '', email: '', password: '' })
-                }}
-                className="bg-purple-300 border-3 border-black rounded-xl px-4 py-2 font-black text-black uppercase tracking-wide text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200"
-              >
-                {isLogin 
-                  ? 'BELUM PUNYA AKUN? DAFTAR!' 
-                  : 'SUDAH PUNYA AKUN? MASUK!'
-                }
-              </button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-black text-gray-700 uppercase tracking-wide mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border-3 border-black rounded-lg focus:outline-none focus:ring-0 focus:border-purple-500 font-bold text-gray-900 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
+                placeholder="Masukkan password"
+              />
             </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black py-3 px-4 rounded-lg border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'MEMPROSES...' : (isLogin ? 'MASUK' : 'DAFTAR')}
+            </button>
           </form>
-         </div>
-       </div>
-       
-       {/* Footer */}
-       <div className="absolute bottom-4 left-0 right-0">
-         <div className="text-center">
-           <p className="text-sm font-bold text-black/70">
-             © 2025 Made with ❤️ by <span className="font-black text-black">slucterCode</span>
-           </p>
-         </div>
-       </div>
-     </div>
-   )
+
+          {/* Tombol Guest Mode */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors font-bold border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-200"
+            >
+              🚀 Masuk sebagai Tamu
+            </button>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Data akan disimpan di perangkat ini
+            </p>
+          </div>
+
+          <div className="mt-6 text-center">
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-purple-600 hover:text-purple-800 font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+            >
+              {isLogin ? 'Belum punya akun? Daftar di sini' : 'Sudah punya akun? Masuk di sini'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

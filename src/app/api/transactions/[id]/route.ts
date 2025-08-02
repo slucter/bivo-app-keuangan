@@ -5,7 +5,7 @@ import { getUserFromRequest } from '@/lib/auth'
 // PUT - Update transaksi
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request)
@@ -18,7 +18,8 @@ export async function PUT(
     }
 
     const { amount, description, type, categoryId, date } = await request.json()
-    const transactionId = params.id
+    const resolvedParams = await params
+    const transactionId = resolvedParams.id
 
     // Cek apakah transaksi milik user
     const existingTransaction = await prisma.transaction.findFirst({
@@ -52,7 +53,13 @@ export async function PUT(
       }
     }
 
-    const updateData: any = {}
+    const updateData: {
+      amount?: number
+      description?: string
+      type?: 'INCOME' | 'EXPENSE' | 'SAVINGS'
+      categoryId?: string
+      date?: Date
+    } = {}
     if (amount !== undefined) updateData.amount = parseFloat(amount)
     if (description !== undefined) updateData.description = description
     if (type !== undefined) updateData.type = type
@@ -80,7 +87,7 @@ export async function PUT(
 // DELETE - Hapus transaksi
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request)
@@ -92,7 +99,8 @@ export async function DELETE(
       )
     }
 
-    const transactionId = params.id
+    const resolvedParams = await params
+    const transactionId = resolvedParams.id
 
     // Cek apakah transaksi milik user
     const existingTransaction = await prisma.transaction.findFirst({

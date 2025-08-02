@@ -1,10 +1,62 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
   <rect width="512" height="512" rx="64" fill="#2563eb"/>
-  <circle cx="256" cy="200" r="80" fill="#ffffff" opacity="0.9"/>
-  <text x="256" y="220" font-family="Arial, sans-serif" font-size="60" font-weight="bold" text-anchor="middle" fill="#2563eb">$</text>
-  <rect x="120" y="320" width="40" height="80" rx="8" fill="#ffffff" opacity="0.8"/>
-  <rect x="180" y="300" width="40" height="100" rx="8" fill="#ffffff" opacity="0.9"/>
-  <rect x="240" y="280" width="40" height="120" rx="8" fill="#ffffff"/>
-  <rect x="300" y="290" width="40" height="110" rx="8" fill="#ffffff" opacity="0.9"/>
-  <rect x="360" y="310" width="40" height="90" rx="8" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Money Bag Shadow -->
+  <ellipse cx="260" cy="405" rx="95" ry="22" fill="#000000" opacity="0.2"/>
+  
+  <!-- Money Bag Body -->
+  <path d="M 256 135 Q 256 120 265 120 L 345 120 Q 360 120 360 135 L 360 175 Q 370 185 370 210 L 370 345 Q 370 385 340 385 L 180 385 Q 140 385 140 345 L 140 210 Q 140 185 150 175 L 150 135 Q 150 120 165 120 L 245 120 Q 256 120 256 135 Z" fill="#22c55e"/>
+  
+  <!-- Money Bag Neck -->
+  <rect x="225" y="120" width="60" height="40" rx="30" fill="#f59e0b"/>
+  <rect x="230" y="125" width="50" height="8" rx="4" fill="#d97706"/>
+  <rect x="230" y="138" width="50" height="8" rx="4" fill="#d97706"/>
+  <rect x="230" y="151" width="50" height="8" rx="4" fill="#d97706"/>
+  
+  <!-- Money Bag Highlight -->
+  <path d="M 160 185 Q 175 175 200 185 Q 225 200 240 225 Q 255 250 240 275 Q 225 300 200 315 Q 175 330 160 315 Q 145 300 145 275 Q 145 250 160 225 Q 175 200 160 185" fill="#16a34a" opacity="0.8"/>
+  
+  <!-- Dollar Sign -->
+  <circle cx="256" cy="265" r="55" fill="#fbbf24"/>
+  <text x="256" y="285" font-family="Arial, sans-serif" font-size="65" font-weight="bold" text-anchor="middle" fill="#ffffff">$</text>
+  
+  <!-- Floating Gold Coins -->
+  <circle cx="120" cy="210" r="22" fill="#fbbf24"/>
+  <circle cx="125" cy="205" r="16" fill="#f59e0b"/>
+  
+  <circle cx="95" cy="290" r="16" fill="#fbbf24"/>
+  <circle cx="98" cy="287" r="11" fill="#f59e0b"/>
+  
+  <circle cx="135" cy="345" r="19" fill="#fbbf24"/>
+  <circle cx="140" cy="340" r="14" fill="#f59e0b"/>
+  
+  <circle cx="385" cy="225" r="24" fill="#fbbf24"/>
+  <circle cx="390" cy="220" r="18" fill="#f59e0b"/>
+  
+  <circle cx="415" cy="305" r="16" fill="#fbbf24"/>
+  <circle cx="417" cy="302" r="11" fill="#f59e0b"/>
+  
+  <circle cx="375" cy="370" r="22" fill="#fbbf24"/>
+  <circle cx="380" cy="365" r="16" fill="#f59e0b"/>
+  
+  <!-- Additional Coins -->
+  <circle cx="80" cy="160" r="14" fill="#fbbf24"/>
+  <circle cx="83" cy="157" r="10" fill="#f59e0b"/>
+  
+  <circle cx="430" cy="160" r="18" fill="#fbbf24"/>
+  <circle cx="434" cy="156" r="13" fill="#f59e0b"/>
+  
+  <!-- Sparkle Effects -->
+  <path d="M 65 160 L 70 175 L 85 170 L 70 185 L 65 200 L 60 185 L 45 170 L 60 175 Z" fill="#fbbf24" opacity="0.8"/>
+  <path d="M 440 160 L 445 175 L 460 170 L 445 185 L 440 200 L 435 185 L 420 170 L 435 175 Z" fill="#fbbf24" opacity="0.8"/>
+  <path d="M 80 400 L 85 415 L 100 410 L 85 425 L 80 440 L 75 425 L 60 410 L 75 415 Z" fill="#fbbf24" opacity="0.6"/>
+  <path d="M 425 400 L 430 415 L 445 410 L 430 425 L 425 440 L 420 425 L 405 410 L 420 415 Z" fill="#fbbf24" opacity="0.6"/>
+  
+  <!-- Money Bag Rope Details -->
+  <circle cx="235" cy="130" r="3" fill="#d97706"/>
+  <circle cx="245" cy="130" r="3" fill="#d97706"/>
+  <circle cx="255" cy="130" r="3" fill="#d97706"/>
+  <circle cx="265" cy="130" r="3" fill="#d97706"/>
+  <circle cx="275" cy="130" r="3" fill="#d97706"/>
 </svg>

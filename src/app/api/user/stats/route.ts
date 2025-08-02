@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const incomeResult = await prisma.transaction.aggregate({
       where: {
         userId: user.userId,
-        type: 'income'
+        type: 'INCOME'
       },
       _sum: {
         amount: true
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const expenseResult = await prisma.transaction.aggregate({
       where: {
         userId: user.userId,
-        type: 'expense'
+        type: 'EXPENSE'
       },
       _sum: {
         amount: true
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
     // Get unique categories used
     const categoriesUsed = await prisma.transaction.findMany({
       where: { userId: user.userId },
-      select: { category: true },
-      distinct: ['category']
+      select: { categoryId: true },
+      distinct: ['categoryId']
     })
 
     const stats = {
